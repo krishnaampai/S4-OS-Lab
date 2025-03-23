@@ -1,5 +1,5 @@
 #include <stdio.h>
-
+#include <stdlib.h>
 typedef struct {
 	int name;
 	int at;
@@ -24,7 +24,17 @@ int main(){
 		
 		scanf("%d%d%d",&process[i].name,&process[i].at,&process[i].bt);
 	}
-	
+	// Sort processes by Arrival Time (Bubble Sort)
+	for (int i = 0; i < n - 1; i++) {
+	    for (int j = 0; j < n - i - 1; j++) {
+		  if (process[j].at > process[j + 1].at) {
+		      Process temp = process[j];
+		      process[j] = process[j + 1];
+		      process[j + 1] = temp;
+		  }
+	    }
+	}
+
 	
 	//int n = sizeof(process)/sizeof(Process);
 	int currentTime =0;
@@ -32,6 +42,9 @@ int main(){
 	printf("\nGnatt Chart\n");
 	printf("Time | Process\n");
 	for (int i =0;i < n;i++){
+		if (currentTime < process[i].at) {
+            	currentTime = process[i].at;  // Idle time if CPU is free
+        	}
 		int execution_time = process[i].bt;
 		printf ("%-4d | P%d\n", currentTime , process[i].name);
 		currentTime +=execution_time;
@@ -43,7 +56,9 @@ int main(){
 	printf ("\nTable - \n");
 	printf ("PId\tBT\tAT\tCT\tTAT\tWT\n");
 	for (int i =0;i<n;i++){
-		printf ("P%d\t%d\t%d\t%d\t%d\t%d\t\n",process[i].name,process[i].bt,process[i].at,process[i].ct,process[i].tat,process[i].wt);
+		printf ("P%d\t%d\t%d\t%d\t%d\t%d\t\n",process[i].name,process[i].bt,
+		process[i].at,process[i].ct,
+		process[i].tat,process[i].wt);
 	}
 	
 	
