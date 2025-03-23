@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// Structure to represent a memory block
+
 struct Block {
     int id;
     int size;
