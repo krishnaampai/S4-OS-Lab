@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
+// Structure to represent a memory block
 struct Block {
     int id;
     int size;
+    int allocated; // Flag to check if the block is allocated
     struct Block* next;
 };
 
@@ -13,6 +14,7 @@ struct Block* createBlock(int size, int id) {
     struct Block* newBlock = (struct Block*)malloc(sizeof(struct Block));
     newBlock->size = size;
     newBlock->id = id;
+    newBlock->allocated = 0; // Initially not allocated
     newBlock->next = NULL;
     return newBlock;
 }
@@ -34,27 +36,14 @@ struct Block* createMemoryBlocks(int numBlocks) {
     return head;
 }
 
-// Function to copy memory block list for fresh allocation
-struct Block* copyMemoryBlocks(struct Block* original) {
-    struct Block* head = NULL, *tail = NULL, *temp = original;
-    while (temp) {
-        struct Block* newBlock = createBlock(temp->size, temp->id);
-        if (!head)
-            head = newBlock;
-        else
-            tail->next = newBlock;
-        tail = newBlock;
-        temp = temp->next;
-    }
-    return head;
-}
-
 // Function to display remaining free memory blocks
 void displayMemory(struct Block* head) {
     printf("\nRemaining Free Blocks:\n");
     struct Block* temp = head;
     while (temp) {
-        printf("Block %d: %d KB\n", temp->id, temp->size);
+        if (!temp->allocated) {
+            printf("Block %d: %d KB\n", temp->id, temp->size);
+        }
         temp = temp->next;
     }
 }
@@ -68,9 +57,9 @@ void firstFit(struct Block* head, int processSize[], int numProcesses) {
     for (int i = 0; i < numProcesses; i++) {
         temp = head;
         while (temp) {
-            if (temp->size >= processSize[i]) {
+            if (!temp->allocated && temp->size >= processSize[i]) {
                 printf("  %d\t\t%d\t\t%d\n", i + 1, processSize[i], temp->id);
-                temp->size -= processSize[i];
+                temp->allocated = 1; // Mark block as allocated
                 break;
             }
             temp = temp->next;
@@ -90,7 +79,7 @@ void bestFit(struct Block* head, int processSize[], int numProcesses) {
         temp = head;
         bestBlock = NULL;
         while (temp) {
-            if (temp->size >= processSize[i] &&
+            if (!temp->allocated && temp->size >= processSize[i] &&
                 (!bestBlock || temp->size < bestBlock->size)) {
                 bestBlock = temp;
             }
@@ -98,7 +87,7 @@ void bestFit(struct Block* head, int processSize[], int numProcesses) {
         }
         if (bestBlock) {
             printf("  %d\t\t%d\t\t%d\n", i + 1, processSize[i], bestBlock->id);
-            bestBlock->size -= processSize[i];
+            bestBlock->allocated = 1;
         } else {
             printf("  %d\t\t%d\t\tNot Allocated\n", i + 1, processSize[i]);
         }
@@ -115,7 +104,7 @@ void worstFit(struct Block* head, int processSize[], int numProcesses) {
         temp = head;
         worstBlock = NULL;
         while (temp) {
-            if (temp->size >= processSize[i] &&
+            if (!temp->allocated && temp->size >= processSize[i] &&
                 (!worstBlock || temp->size > worstBlock->size)) {
                 worstBlock = temp;
             }
@@ -123,7 +112,7 @@ void worstFit(struct Block* head, int processSize[], int numProcesses) {
         }
         if (worstBlock) {
             printf("  %d\t\t%d\t\t%d\n", i + 1, processSize[i], worstBlock->id);
-            worstBlock->size -= processSize[i];
+            worstBlock->allocated = 1;
         } else {
             printf("  %d\t\t%d\t\tNot Allocated\n", i + 1, processSize[i]);
         }
@@ -146,7 +135,7 @@ int main() {
     // Get memory block details
     printf("Enter number of memory blocks: ");
     scanf("%d", &numBlocks);
-    struct Block* originalHead = createMemoryBlocks(numBlocks); // Keep original memory state
+    struct Block* head = createMemoryBlocks(numBlocks);
 
     // Get process details
     printf("\nEnter number of processes: ");
@@ -158,8 +147,12 @@ int main() {
     }
 
     while (1) { // Loop to allow reallocation
-        // Create a fresh copy of memory blocks
-        struct Block* head = copyMemoryBlocks(originalHead);
+        // Reset allocation status
+        struct Block* temp = head;
+        while (temp) {
+            temp->allocated = 0;
+            temp = temp->next;
+        }
 
         // Choose allocation strategy
         printf("\nChoose Allocation Strategy:\n");
@@ -179,21 +172,15 @@ int main() {
                 break;
             case 4:
                 printf("Exiting...\n");
-                freeMemory(originalHead); // Free original memory list
+                freeMemory(head);
                 return 0;
             default:
                 printf("Invalid choice! Try again.\n");
-                freeMemory(head);
                 continue;
         }
 
         // Display remaining memory blocks
         displayMemory(head);
-
-        // Free copied memory list after each allocation cycle
-        freeMemory(head);
     }
-
-    return 0;
 }
 
