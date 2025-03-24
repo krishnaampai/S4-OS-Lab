@@ -1,121 +1,84 @@
 #include <stdio.h>
-#include <stdlib.h>
 
 typedef struct {
     int name;
-    int arrival;
-    int burst;
-    int remaining;
-    int status;
-    int completion;
-    int waiting;
-    int turnaround;
+    int at;
+    int bt;
+    int ct;
+    int tat;
+    int wt;
+    int remaining_bt;
 } Process;
 
-typedef struct Node {
-    Process process;
-    struct Node* next;
-} Node;
-
-Node *front = NULL;
-Node *rear = NULL;
-
-void enqueue(Process process) {
-    Node* newNode = (Node*)malloc(sizeof(Node));
-    newNode->process = process;
-    newNode->next = NULL;
-
-    if (front == NULL) {
-        front = rear = newNode;
-    } else {
-        rear->next = newNode;
-        rear = newNode;
+void roundRobin(Process process[], int n, int timeQuantum) {
+    int currentTime = 0, completed = 0;
+    
+    // Initialize remaining burst time
+    for (int i = 0; i < n; i++) {
+        process[i].remaining_bt = process[i].bt;
     }
-}
 
-Process dequeue() {
-    Node* temp = front;
-    Process process = temp->process;
-    front = front->next;
-    free(temp);
-    return process;
+    printf("\nGantt Chart:\nTime | Process\n");
+
+    while (completed < n) {
+        int executed = 0;
+        for (int i = 0; i < n; i++) {
+            if (process[i].remaining_bt > 0 && process[i].at <= currentTime) {
+                executed = 1; // A process was executed in this iteration
+
+                // Print the Gantt chart
+                printf("%-4d | P%d\n", currentTime, process[i].name);
+
+                // Execute process for time quantum or remaining time
+                int execTime = (process[i].remaining_bt > timeQuantum) ? timeQuantum : process[i].remaining_bt;
+                process[i].remaining_bt -= execTime;
+                currentTime += execTime;
+
+                // If process is completed, update completion time
+                if (process[i].remaining_bt == 0) {
+                    process[i].ct = currentTime;
+                    process[i].tat = process[i].ct - process[i].at;
+                    process[i].wt = process[i].tat - process[i].bt;
+                    completed++;
+                }
+            }
+        }
+        if (!executed) currentTime++; // If no process was executed, move time forward
+    }
+
+    // Print Table
+    printf("\nTable - \n");
+    printf("PId\tAT\tBT\tCT\tTAT\tWT\n");
+    float avg_tat = 0, avg_wt = 0;
+    
+    for (int i = 0; i < n; i++) {
+        printf("P%d\t%d\t%d\t%d\t%d\t%d\n", process[i].name, process[i].at, process[i].bt, process[i].ct, process[i].tat, process[i].wt);
+        avg_tat += process[i].tat;
+        avg_wt += process[i].wt;
+    }
+
+    // Print averages
+    printf("\nAvg TAT = %.2f\n", avg_tat / n);
+    printf("Avg WT = %.2f\n", avg_wt / n);
 }
 
 int main() {
-    int n;
+    int n, timeQuantum;
+    
     printf("Enter number of processes: ");
     scanf("%d", &n);
-
-    Process processes[n];
-
+    
+    Process process[n];
+    
+    printf("Enter Process name, AT, and BT:\n");
     for (int i = 0; i < n; i++) {
-        printf("Enter arrival time and burst time for process %d: ", i + 1);
-        scanf("%d %d", &processes[i].arrival, &processes[i].burst);
-        processes[i].name = i + 1;
-        processes[i].remaining = processes[i].burst;
-        processes[i].status = 0;
-        processes[i].completion = -1;
-        processes[i].turnaround = -1;
-        processes[i].waiting = -1;
+        scanf("%d%d%d", &process[i].name, &process[i].at, &process[i].bt);
     }
 
-    int quantum = 4;
-    int currentTime = 0;
-    int completed = 0;
+    printf("Enter time quantum: ");
+    scanf("%d", &timeQuantum);
 
-    enqueue(processes[0]);
-    processes[0].status = 1;
-
-    printf("\nGantt Chart:\n");
-
-    while (completed < n) {
-        for (int i = 0; i < n; i++) {
-            if (processes[i].arrival <= currentTime && processes[i].status != 1) {
-                enqueue(processes[i]);
-                processes[i].status = 1;
-            }
-        }
-
-        if (front != NULL) {
-            Process currentProcess = dequeue();
-            int executionTime = (currentProcess.remaining < quantum) ? currentProcess.remaining : quantum;
-            currentProcess.remaining -= executionTime;
-            currentTime += executionTime;
-
-            printf("P%d(%d) ", currentProcess.name, currentTime);
-
-            if (currentProcess.remaining <= 0) {
-                completed++;
-                for (int i = 0; i < n; i++) {
-                    if (processes[i].name == currentProcess.name) {
-                        processes[i].completion = currentTime;
-                        break;
-                    }
-                }
-            } else {
-                enqueue(currentProcess);
-            }
-        } else {
-            currentTime++;
-        }
-    }
-
-    float avgWT = 0.0;
-    float avgTAT = 0.0;
-
-    printf("\nProcess\tArrival Time\tBurst Time\tCompletion Time\tTurnaround Time\tWaiting Time\n");
-    for (int i = 0; i < n; i++) {
-        processes[i].turnaround = processes[i].completion - processes[i].arrival;
-        processes[i].waiting = processes[i].turnaround - processes[i].burst;
-        printf("P%d\t%d\t\t%d\t\t%d\t\t%d\t\t%d\n",
-               processes[i].name, processes[i].arrival, processes[i].burst,
-               processes[i].completion, processes[i].turnaround, processes[i].waiting);
-        avgWT += processes[i].waiting;
-        avgTAT += processes[i].turnaround;
-    }
-
-    printf("\nAverage Waiting Time = %.2f\n", avgWT / n);
-    printf("Average Turnaround Time = %.2f\n", avgTAT / n);
+    roundRobin(process, n, timeQuantum);
 
     return 0;
 }
