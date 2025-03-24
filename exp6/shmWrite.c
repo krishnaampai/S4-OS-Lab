@@ -12,10 +12,13 @@ int main(){
 	shm_id = shmget(key, SHM_SIZE,IPC_CREAT|0666);
 	
 	shm = shmat(shm_id , NULL, 0);
+	printf("Data written to shared memory-\n"); 
 	sprintf(shm, "Hello, shared memory!\n");
+	sprintf(shm+25, "This is me!");
 	printf(shm);
-	printf("Data written to shared memory\n"); 
+	
 	
 	shmdt(shm);
+	
 	return 0;
 }

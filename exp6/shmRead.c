@@ -23,8 +23,10 @@ int main() {
         perror("shmat failed");
         exit(1);
     }
+    	printf("Data read from shared memory- \n"); 
 	printf("%s", shm);
-	printf("Data read from shared memory\n"); 
+	printf("%s",shm+25);
+	
     shmdt(shm);
 
     return 0;
