@@ -1,9 +1,9 @@
-S4 OS LAB Experiments (KTU 2019 Scheme)
+#S4 OS LAB Experiments (KTU 2019 Scheme)
 
-# 🖥️ Operating Systems Lab - Experiments  
+🖥️ Operating Systems Lab - Experiments  
 
 
-### 📚 Course Code: CSL 204 | Course Title: Operating Systems Lab  
+ 📚 Course Code: CSL 204 | Course Title: Operating Systems Lab  
 ---
 
 ## 🔹 **List of Experiments**  
