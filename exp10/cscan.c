@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 #define MAX_REQUESTS 100
-
+#define DISK_SIZE 200
 void sort(int *requests, int numRequests){
     for (int i = 0; i < numRequests; i++){
         for (int j = 0; j < numRequests - 1; j++){
@@ -33,10 +33,11 @@ int calculateTotalSeekTime(int *requests, int numRequests, int currentTrack) {
 
     // Move left if needed
     if (i > 0) {
-        totalSeekTime += abs(currentTrack - requests[i - 1]);
-        currentTrack = requests[i - 1];
+        totalSeekTime += abs(currentTrack - (DISK_SIZE - 1)); // Move to end
+        totalSeekTime += abs(0 - (DISK_SIZE - 1)); // Jump to start (no seek time)
+        currentTrack = 0;
 
-        for (int j = i - 2; j >= 0; j--) {
+        for (int j = 0; j < i; j++) {
             totalSeekTime += abs(currentTrack - requests[j]);
             currentTrack = requests[j];
         }
