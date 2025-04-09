@@ -3,10 +3,11 @@
 
 #define MAX_REQUESTS 100
 #define DISK_SIZE 200
-void sort(int *requests, int numRequests){
-    for (int i = 0; i < numRequests; i++){
-        for (int j = 0; j < numRequests - 1; j++){
-            if (requests[j] > requests[j + 1]){
+
+void sort(int requests[MAX_REQUESTS], int numRequests) {
+    for (int i = 0; i < numRequests - 1; i++) {
+        for (int j = 0; j < numRequests - i - 1; j++) {
+            if (requests[j] > requests[j + 1]) {
                 int temp = requests[j];
                 requests[j] = requests[j + 1];
                 requests[j + 1] = temp;
@@ -15,34 +16,42 @@ void sort(int *requests, int numRequests){
     }
 }
 
-int calculateTotalSeekTime(int *requests, int numRequests, int currentTrack) {
+int calculateTotalSeekTime(int requests[MAX_REQUESTS], int numRequests, int currentTrack) {
     int totalSeekTime = 0;
-    int direction = 1;  
     int i = 0;
 
-    // Find the first request greater than or equal to the current track
+    printf("Seek Sequence: %d", currentTrack);
+
     while (i < numRequests && requests[i] < currentTrack) {
         i++;
     }
 
-    // Move right first
+    // Move right to service remaining requests
     for (int j = i; j < numRequests; j++) {
         totalSeekTime += abs(currentTrack - requests[j]);
         currentTrack = requests[j];
+        printf(" -> %d", currentTrack);
     }
 
-    // Move left if needed
-    if (i > 0) {
-        totalSeekTime += abs(currentTrack - (DISK_SIZE - 1)); // Move to end
-        totalSeekTime += abs(0 - (DISK_SIZE - 1)); // Jump to start (no seek time)
-        currentTrack = 0;
-
-        for (int j = 0; j < i; j++) {
-            totalSeekTime += abs(currentTrack - requests[j]);
-            currentTrack = requests[j];
-        }
+    // Move to end of disk
+    if (currentTrack != DISK_SIZE - 1) {
+        totalSeekTime += abs(currentTrack - (DISK_SIZE - 1));
+        currentTrack = DISK_SIZE - 1;
+        printf(" -> %d", currentTrack);
     }
 
+    
+    printf(" -> 0");
+    currentTrack = 0;
+
+    // Continue from beginning up to requests < original position
+    for (int j = 0; j < i; j++) {
+        totalSeekTime += abs(currentTrack - requests[j]);
+        currentTrack = requests[j];
+        printf(" -> %d", currentTrack);
+    }
+
+    printf("\n");
     return totalSeekTime;
 }
 
@@ -68,8 +77,7 @@ int main() {
     sort(requests, numRequests);
 
     int totalSeekTime = calculateTotalSeekTime(requests, numRequests, currentTrack);
-    printf("Total seek time using SCAN: %d\n", totalSeekTime);
+    printf("Total seek time using C-SCAN: %d\n", totalSeekTime);
 
     return 0;
 }
-
